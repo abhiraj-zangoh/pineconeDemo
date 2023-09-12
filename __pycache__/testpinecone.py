@@ -1,6 +1,6 @@
 from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
-import torch
+# import torch
 import pinecone
 import os
 from tqdm.auto import tqdm
@@ -17,21 +17,22 @@ for record in dataset['questions']:
   
 # remove duplicates
 questions = list(set(questions))
+#check for gpu 
+# device = 'cuda' if torch.cuda.is_available() else 'cpu'
+# if device != 'cuda':
+#     print(f"You are using {device}. This is much slower than using "
+#           "a CUDA-enabled GPU. If on Colab you can change this by "
+#           "clicking Runtime > Change runtime type > GPU.")
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-if device != 'cuda':
-    print(f"You are using {device}. This is much slower than using "
-          "a CUDA-enabled GPU. If on Colab you can change this by "
-          "clicking Runtime > Change runtime type > GPU.")
-
-model = SentenceTransformer('all-MiniLM-L6-v2', device=device)
+model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
 
 query = 'which city is the most populated in the world?'
 
 xq = model.encode(query)
-print(xq.shape)
+# print(xq.shape)
 _id = '0'
 metadata = {'text': query}
+
 
 vectors = [(_id, xq, metadata)]
 # print('\n'.join(questions[:5]))
@@ -51,12 +52,17 @@ batch_size = 128
 
 
 # check number of records in the index
-print(index.describe_index_stats())
-query = "which city has the highest population in the world?"
+# print(index.describe_index_stats())
+query = input("Enter your sentence: ")
 
 # create the query vector
 xq = model.encode(query).tolist()
 
 # now query
-xc = index.query(xq, top_k=5, include_metadata=True)
-print(xc)
+xc = index.query(xq, top_k=10, include_metadata=True)
+# print(xc)
+print("The similar sentence to the one you have input is :")
+sno=0;
+for entry in xc.matches:
+    print(sno ,".",entry.metadata['text'])
+    sno+=1
